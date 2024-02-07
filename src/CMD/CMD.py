@@ -1,7 +1,7 @@
 import os
 import time
 import threading
-
+import re
 
 from pathlib import Path
 
@@ -43,7 +43,7 @@ class CMD(Observable):
         self.configPath:   Path = rootPath.joinpath("/game/csgo/cfg/")
         self.logFilePath:  Path = rootPath.joinpath("/game/csgo/console.log")
         self.thread: threading.Thread = None
-        self.session_key = 123
+        self.session_key = "123"
         self.is_attached = False
         self.lastLine: str = ""
 
@@ -52,7 +52,8 @@ class CMD(Observable):
         pass
 
     def start(self):
-        pass
+        self.thread = threading.Thread(target=self.run)
+        self.thread.start()
 
     def run(self):
         # Write "attach" Config
@@ -69,15 +70,18 @@ class CMD(Observable):
         fileReader = getFileReader(file)
 
         # Wait until config is executed
-        # + Verify
+        # + Verify Session Key
+        sessionKeyPattern = re.compile(r"SessionKey: [(\w+)]")
         while not self.is_attached:
             line = next(fileReader)
             #Compare keys
+            if sessionKeyPattern.match(line) == self.session_key:
+                self.is_attached = True
             time.sleep(1)
 
         while True:
-            curLine = next(fileReader)
-
+            curLine:str = next(fileReader)
+            
             if True:
                 self.lastLine = curLine
                 self.notfiy()
@@ -111,7 +115,7 @@ class CMD(Observable):
         #status
         file.write("status\n")
     
-        file.write("echoln SessionKey: " + self.session_key + "\n")
+        file.write("echoln SessionKey: [" + self.session_key + "]\n")
     
         file.write("echo Attempting to attach CMD Interface...\n")
         file.write("echo https://github.com/ExecutableMarley/<projectPath>\n")
