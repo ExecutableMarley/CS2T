@@ -1,5 +1,7 @@
 import os
+import time
 import threading
+
 
 from pathlib import Path
 
@@ -23,7 +25,7 @@ class Observable:
                 observer.observe(self)
 
 
-def getFileReader(file: File) -> str:
+def getFileReader(file) -> str:
     file.seek(0,2) # Go to the end of the file
     while True:
         line = file.readline()
@@ -37,9 +39,9 @@ class CMD(Observable):
     
     def __init__(self, rootPath: Path):
         Observable.__init__(self)
-        self.rootPath:   Path = rootPath
-        self.configPath: Path = rootPath.joinpath("/cfg/")
-        self.debugPath:  Path = rootPath.joinpath("/debug/")
+        self.rootPath:     Path = rootPath
+        self.configPath:   Path = rootPath.joinpath("/game/csgo/cfg/")
+        self.logFilePath:  Path = rootPath.joinpath("/game/csgo/console.log")
         self.thread: threading.Thread = None
         self.session_key = 123
         self.is_attached = False
@@ -54,14 +56,15 @@ class CMD(Observable):
 
     def run(self):
         # Write "attach" Config
+        self._writeAttachConfigFile()
 
         # Wait for debug.log file is created
-        while not debugPath.is_file():
+        while not self.logFilePath.is_file():
             time.sleep(1)
 
-        file = open(GameState.logFilePath, "r", encoding="utf-8")
+        file = open(self.logFilePath, "r", encoding="utf-8")
         if not file.readable():
-            print("File was not readable")
+            raise Exception("Console Log File was not readable")
 
         fileReader = getFileReader(file)
 
@@ -94,8 +97,23 @@ class CMD(Observable):
     def is_input_possible(self) -> bool:
         pass
 
-    def getLastLine() -> str:
+    def getLastLine(self) -> str:
         return self.lastLine
 
-    def _writeConfigFile():
-        pass
+    def _writeAttachConfigFile(self):
+        file = open(self.configPath.joinpath("cmd.cfg"), "w")
+    
+        if not file.writable():
+            raise Exception("Failed to open .cfg file for writing")
+    
+        file.write("bind \"F9\" \"exec excmd\"\n")
+        
+        #status
+        file.write("status\n")
+    
+        file.write("echoln SessionKey: " + self.session_key + "\n")
+    
+        file.write("echo Attempting to attach CMD Interface...\n")
+        file.write("echo https://github.com/ExecutableMarley/<projectPath>\n")
+    
+        file.close()
