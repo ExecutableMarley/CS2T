@@ -4,7 +4,7 @@ import re
 
 from pathlib import Path
 
-def getFileReader(file) -> str:
+def getFileReader(file: File) -> str:
     file.seek(0,2) # Go to the end of the file
     while True:
         line = file.readline()
@@ -68,13 +68,6 @@ class GameState:
             self.previousUIState = match.group(1)
             self.currentUIState = match.group(2)
 
-
-
-
-#ChangeGameUIState: CSGO_GAME_UI_STATE_MAINMENU -> CSGO_GAME_UI_STATE_LOADINGSCREEN
-#ChangeGameUIState: CSGO_GAME_UI_STATE_LOADINGSCREEN -> CSGO_GAME_UI_STATE_INGAME
-
-#ChangeGameUIState: <PreviousUiState> -> <CurrentUiState>
 
 
 
