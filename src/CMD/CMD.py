@@ -1,3 +1,4 @@
+import os
 import threading
 
 from pathlib import Path
@@ -21,7 +22,15 @@ class Observable:
             if observer != modifier:
                 observer.observe(self)
 
-        
+
+def getFileReader(file: File) -> str:
+    file.seek(0,2) # Go to the end of the file
+    while True:
+        line = file.readline()
+        if not line:
+            time.sleep(1) # Sleep briefly
+            continue
+        yield line
 
 
 class CMD(Observable):
@@ -32,6 +41,9 @@ class CMD(Observable):
         self.configPath: Path = rootPath.joinpath("/cfg/")
         self.debugPath:  Path = rootPath.joinpath("/debug/")
         self.thread: threading.Thread = None
+        self.session_key = 123
+        self.is_attached = False
+        self.lastLine: str = ""
 
     def __del__(self):
         #Delete Config
@@ -41,7 +53,34 @@ class CMD(Observable):
         pass
 
     def run(self):
-        pass
+        # Write "attach" Config
+
+        # Wait for debug.log file is created
+        while not debugPath.is_file():
+            time.sleep(1)
+
+        file = open(GameState.logFilePath, "r", encoding="utf-8")
+        if not file.readable():
+            print("File was not readable")
+
+        fileReader = getFileReader(file)
+
+        # Wait until config is executed
+        # + Verify
+        while not self.is_attached:
+            line = next(fileReader)
+            #Compare keys
+            time.sleep(1)
+
+        while True:
+            curLine = next(fileReader)
+
+            if True:
+                self.lastLine = curLine
+                self.notfiy()
+
+            time.sleep(1)
+
 
     def execute(self, command: str):
         pass
@@ -56,4 +95,7 @@ class CMD(Observable):
         pass
 
     def getLastLine() -> str:
+        return self.lastLine
+
+    def _writeConfigFile():
         pass
