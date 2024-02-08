@@ -1,48 +1,31 @@
 import time
 import threading
 import re
+import enum
 
+from ConsoleInterface.CMD import CMD
 from pathlib import Path
 
-def getFileReader(file: File) -> str:
-    file.seek(0,2) # Go to the end of the file
-    while True:
-        line = file.readline()
-        if not line:
-            time.sleep(1) # Sleep briefly
-            continue
-        yield line
 
-def writeConfigFile(csgoPath: Path):
-    file = open(csgoPath.joinpath("cfg/tracker.cfg"), "w")
-    
-    if not file.writable():
-        raise Exception("Failed to open tracker.cfg config file for writing")
-    
-    #con_logfile console.log
-    file.write("con_logfile \"console.log\" \n")
-    #alias update "status; echo 'Updated'"
-    file.write("alias update \"status; echo 'Updated'\"\n")
-    #status
-    file.write("status\n")
-    
-    file.write("echo Damage Tracker Loaded!\n")
-    file.write("echo https://github.com/ExecutableMarley/\n")
-    
-    file.close()
-
-class UI_STATE(Enum):
+class UI_STATE(enum.Enum):
     UI_STATE_MAINMENU = 1
     UI_STATE_LOADING = 2
     UI_STATE_INGAME = 3
 
+    def getFromStr(string: str):
+        if string == "CSGO_GAME_UI_STATE_MAINMENU":
+            return UI_STATE.UI_STATE_MAINMENU
+        elif string == "CSGO_GAME_UI_STATE_LOADINGSCREEN":
+            return UI_STATE.UI_STATE_LOADING
+        elif string == "CSGO_GAME_UI_STATE_INGAME":
+            return UI_STATE.UI_STATE_INGAME
+        raise Exception("Invalid UI_STATE string")
+
 class GameState:
-    
-    logFilePath: Path = ""
     
     statePattern = re.compile(r"ChangeGameUIState: (\w+) -> (\w+)")
     
-    def GameState(self):
+    def __init__(self):
         self.thread = None
         self.currentUIState = UI_STATE.UI_STATE_MAINMENU
         self.previousUIState = UI_STATE.UI_STATE_MAINMENU
@@ -51,28 +34,33 @@ class GameState:
         self.thread = threading.Thread(target=self.run)
     
     def run(self):
-        
-        file = open(GameState.logFilePath, "r", encoding="utf-8")
-        
-        fileReader = getFileReader()
-        
-        
-        while True:
-            nextLine = next(fileReader)
+        pass
             
     def parseFromString(self, string: str):
         #ChangeGameUIState: <PreviousUiState> -> <CurrentUiState>
-        #match = re.search(r"ChangeGameUIState: (\w+) -> (\w+)", string)
         match = GameState.statePattern.match(string)
         if match:
-            self.previousUIState = match.group(1)
-            self.currentUIState = match.group(2)
+            self.previousUIState = UI_STATE.getFromStr(match.group(1))
+            self.currentUIState  = UI_STATE.getFromStr(match.group(2))
+
+    def observe(self, observable):
+        if observable == CMD:
+            self.parseFromString(CMD.lastLine)
+            
+    def getCurrentUIState(self):
+        return self.currentUIState
+    def getPreviousUIState(self):
+        return self.previousUIState
 
 
 
 
-
-
-
-
+if __name__ == "__main__":
+    
+    csgoPath = Path("C:/Program Files (x86)/Steam/steamapps/common/Counter-Strike Global Offensive/")
+    
+    cmd = CMD(csgoPath)
+    
+    cmd.start()
+    
 
