@@ -1,9 +1,17 @@
 import os
+import platform
 import time
 import threading
 import re
 
 from pathlib import Path
+
+#Os specific Imports
+os_name = platform.system()
+if os_name == "Windows":
+    pass
+elif os_name == "Linux":
+    pass
 
 class Observable:
     def __init__(self):
@@ -55,7 +63,8 @@ class CMD(Observable):
 
     def __del__(self):
         #Delete Config
-        pass
+        if self.configPath.joinpath("cmd.cfg").is_file():
+            os.remove(self.configPath.joinpath("cmd.cfg"))
 
     def start(self):
         self.thread = threading.Thread(target=self.run)
@@ -99,13 +108,19 @@ class CMD(Observable):
         pass
 
     def write_allchat(self, message: str):
-        pass
+        execute("say " + message)
 
     def write_teamchat(self, message: str):
-        pass
+        execute("say_team " + message)
 
     def is_input_possible(self) -> bool:
-        pass
+        global os_name
+        if os_name == "Windows":
+            return True
+        elif os_name == "Linux":
+            return True
+        else:
+            return True
 
     def getLastLine(self) -> str:
         return self.lastLine
@@ -118,6 +133,7 @@ class CMD(Observable):
     
         file.write("bind \"F9\" \"exec excmd\"\n")
         
+        #SessionKey: [<sessionKey>]
         file.write("echoln SessionKey: [" + self.session_key + "]\n")
         
         #status
