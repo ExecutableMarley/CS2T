@@ -40,12 +40,18 @@ class CMD(Observable):
     def __init__(self, rootPath: Path):
         Observable.__init__(self)
         self.rootPath:     Path = rootPath
-        self.configPath:   Path = rootPath.joinpath("/game/csgo/cfg/")
-        self.logFilePath:  Path = rootPath.joinpath("/game/csgo/console.log")
+        self.configPath:   Path = rootPath.joinpath("game/csgo/cfg/")
+        self.logFilePath:  Path = rootPath.joinpath("game/csgo/console.log")
         self.thread: threading.Thread = None
         self.session_key = "123"
         self.is_attached = False
         self.lastLine: str = ""
+
+        if not self.rootPath.is_dir():
+            raise Exception("Root Path is not a directory")
+        if not self.configPath.is_dir():
+            raise Exception("Config Path is not a directory")
+
 
     def __del__(self):
         #Delete Config
@@ -112,10 +118,10 @@ class CMD(Observable):
     
         file.write("bind \"F9\" \"exec excmd\"\n")
         
+        file.write("echoln SessionKey: [" + self.session_key + "]\n")
+        
         #status
         file.write("status\n")
-    
-        file.write("echoln SessionKey: [" + self.session_key + "]\n")
     
         file.write("echo Attempting to attach CMD Interface...\n")
         file.write("echo https://github.com/ExecutableMarley/<projectPath>\n")
