@@ -3,6 +3,7 @@ import platform
 import time
 import threading
 import re
+import pyautogui
 
 from pathlib import Path
 
@@ -27,7 +28,7 @@ class Observable:
         except ValueError:
             pass
 
-    def notfiy(self, modifier):
+    def notify(self, modifier):
         for observer in self._observers:
             if observer != modifier:
                 observer.observe(self)
@@ -99,19 +100,41 @@ class CMD(Observable):
             
             if True:
                 self.lastLine = curLine
-                self.notfiy()
+                self.notify()
 
             time.sleep(1)
+            
+    def _writeExecuteConfigFile(self, fileContent: str):
+        file = open(self.configPath.joinpath("cmd.cfg"), "w")
+    
+        if not file.writable():
+            raise Exception("Failed to open <execute>.cfg file for writing")
+        
+        file.write(fileContent)
+        
+        file.close()
 
+    def _deleteExecuteConfigFile(self):
+        if self.configPath.joinpath("cmd.cfg").is_file():
+            os.remove(self.configPath.joinpath("cmd.cfg"))
+
+    def _executeConfigFile(self):
+        pyautogui.press('f9')
+
+    def quick_execute(self, command: str):
+        self._writeExecuteConfigFile(command)
+        self._executeConfigFile()
+        self._deleteExecuteConfigFile()
 
     def execute(self, command: str):
-        pass
+        #Todo: Implement a queue
+        self.quick_execute(command)
 
     def write_allchat(self, message: str):
-        execute("say " + message)
+        self.execute("say " + message)
 
     def write_teamchat(self, message: str):
-        execute("say_team " + message)
+        self.execute("say_team " + message)
 
     def is_input_possible(self) -> bool:
         global os_name
