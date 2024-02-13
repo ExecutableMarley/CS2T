@@ -42,6 +42,22 @@ class GameState:
         if match:
             self.previousUIState = UI_STATE.getFromStr(match.group(1))
             self.currentUIState  = UI_STATE.getFromStr(match.group(2))
+            
+        # [T] <name>@<location>: <message>
+        if string.startswith(" [T] "):
+            pass
+        # [CT] <name>@<location>: <message>
+        elif string.startswith(" [CT] "):
+            pass
+        # [ALL] <name>: <message>
+        elif string.startswith(" [ALL] "):
+            pass
+    
+    def parsePlayerListFromString(self, string: str):
+        pass    
+    
+    def parseMessage(a, name, location, message):
+        pass
 
     def observe(self, observable):
         if observable == CMD:
