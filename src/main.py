@@ -25,6 +25,19 @@ class GameState:
     
     statePattern = re.compile(r"ChangeGameUIState: (\w+) -> (\w+)")
     
+    teamMessagePattern = re.compile(
+        # Capture the team
+        r"\s*\[(?P<team>ALL|T|CT)\]\s*"  
+        # Capture the name, stop at brackets, colon, and @
+        r"(?P<name>[^\[\]:@]+?)"  
+        # Optionally capture the location
+        r"(?:\@(?P<location>[^:\[\]]+))?"
+        # Optionally match the [DEAD] tag  
+        r"(?:\s*\[DEAD\])?"
+        # Capture the message following the colon
+        r":\s*(?P<message>.*)"  
+        )
+    
     def __init__(self):
         self.thread = None
         self.currentUIState = UI_STATE.UI_STATE_MAINMENU
@@ -42,21 +55,21 @@ class GameState:
         if match:
             self.previousUIState = UI_STATE.getFromStr(match.group(1))
             self.currentUIState  = UI_STATE.getFromStr(match.group(2))
+            return
             
         # [T] <name>@<location>: <message>
-        if string.startswith(" [T] "):
-            pass
         # [CT] <name>@<location>: <message>
-        elif string.startswith(" [CT] "):
-            pass
         # [ALL] <name>: <message>
-        elif string.startswith(" [ALL] "):
-            pass
+        if string.startswith(" [ALL] ") or string.startswith(" [T] ") or string.startswith(" [CT] "):
+            match = GameState.teamMessagePattern.match(string)
+            if match:
+                self.parseMessage(match.group("team"), match.group("name"), match.group("location"), match.group("message"))
+                return
     
     def parsePlayerListFromString(self, string: str):
         pass    
     
-    def parseMessage(a, name, location, message):
+    def parseMessage(team, name, location, message):
         pass
 
     def observe(self, observable):
