@@ -38,10 +38,26 @@ class GameState:
         r":\s*(?P<message>.*)"  
         )
     
+    playerListHeaderPattern = re.compile(r"\[Client\]\s+id\s+time\s+ping\s+loss\s+state\s+rate\s+name")
+    playerListPattern = re.compile(
+        r"\[Client\]\s+" # Match the [Client] tag
+        r"(?P<id>\d{1,3})\s+" # Capture the id (1-3 digits)
+        r"\d{1,2}:\d{2}\s+" # Match the time (2 digits:2 digits)
+        r"\d+\s+" # Match the ping (Ignored)
+        r"\d+\s+" # Match the loss (Ignored)
+        r"\w+\s+" # Match the state (Ignored)
+        r"\d+\s+" # Match the rate (Ignored)
+        r"(?P<name>.+)" # Capture the name
+        )
+    
     def __init__(self):
         self.thread = None
         self.currentUIState = UI_STATE.UI_STATE_MAINMENU
         self.previousUIState = UI_STATE.UI_STATE_MAINMENU
+        # Dictionary of players id: name
+        self.playerDict = []
+        self.isParsingPlayerList = False
+        
     
     def start(self):
         self.thread = threading.Thread(target=self.run)
@@ -66,8 +82,25 @@ class GameState:
                 self.parseMessage(match.group("team"), match.group("name"), match.group("location"), match.group("message"))
                 return
     
+        match = GameState.playerListHeaderPattern.match(string)
+        if match:
+            self.isParsingPlayerList = True
+            return
+        
+        # Parse player list
+        if self.isParsingPlayerList:
+            self.isParsingPlayerList = self.parsePlayerListFromString(string)
+    
     def parsePlayerListFromString(self, string: str):
-        pass    
+        if string.startswith("[Client] "):
+            match = GameState.playerListPattern.match(string)
+            if match:
+                self.playerList.append(match.group("name"))
+                id = int(match.group("id"))
+                if id > 0 and id < 64:
+                    self.playerDict[id] = match.group("name")      
+                return True
+        return False
     
     def parseMessage(team, name, location, message):
         pass
