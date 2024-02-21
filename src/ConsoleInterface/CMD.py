@@ -28,13 +28,13 @@ class Observable:
         except ValueError:
             pass
 
-    def notify(self, modifier):
+    def notify(self, modifier = None):
         for observer in self._observers:
             if observer != modifier:
                 observer.observe(self)
 
 
-def getFileReader(file) -> str:
+def getFileReader(file):
     file.seek(0,2) # Go to the end of the file
     while True:
         line = file.readline()
@@ -43,6 +43,17 @@ def getFileReader(file) -> str:
             continue
         yield line
 
+class Command:
+    def __init__(self, command: str, timeOutSeconds: int = 60):
+        self.command = command
+        self.timeOutSeconds = timeOutSeconds
+        self.creationTime = time.time()
+    
+    def get(self) -> str:
+        return self.command
+    
+    def isTimedOut(self) -> bool:
+        return time.time() - self.creationTime > self.timeOutSeconds
 
 class CMD(Observable):
     
@@ -55,6 +66,7 @@ class CMD(Observable):
         self.session_key = "123"
         self.is_attached = False
         self.lastLine: str = ""
+        self.commandQueue: list = []
 
         if not self.rootPath.is_dir():
             raise Exception("Root Path is not a directory")
@@ -70,6 +82,8 @@ class CMD(Observable):
     def start(self):
         self.thread = threading.Thread(target=self.run)
         self.thread.start()
+        
+        threading.Thread(target=self._outputThread).start()
 
     def run(self):
         # Write "attach" Config
@@ -85,27 +99,45 @@ class CMD(Observable):
 
         fileReader = getFileReader(file)
 
+        print("[CMD] Waiting for CSGO to exec...")
+
         # Wait until config is executed
         # + Verify Session Key
-        sessionKeyPattern = re.compile(r"SessionKey: [(\w+)]")
+        sessionKeyPattern = re.compile(r".*SessionKey : \[(\w+)\]")
         while not self.is_attached:
             line = next(fileReader)
             #Compare keys
-            if sessionKeyPattern.match(line) == self.session_key:
+            if sessionKeyPattern.match(line) and sessionKeyPattern.match(line).group(1) == self.session_key:
                 self.is_attached = True
             time.sleep(1)
 
+        print("[CMD] Attached to CSGO")
+
+        dateTimePattern = r"^\d{2}/\d{2} \d{2}:\d{2}:\d{2} "
         while True:
             curLine:str = next(fileReader)
+            
+            curLine = re.sub(dateTimePattern, '', curLine)
+            
+            #print(curLine)
             
             if True:
                 self.lastLine = curLine
                 self.notify()
 
+            #time.sleep(1)
+    
+    def _outputThread(self):
+        while True:
+            if self.is_input_possible() and len(self.commandQueue) > 0:
+                command = self.commandQueue.pop(0)
+                if not command.isTimedOut():
+                    self.quick_execute(command.get())
+                
             time.sleep(1)
-            
+         
     def _writeExecuteConfigFile(self, fileContent: str):
-        file = open(self.configPath.joinpath("cmd.cfg"), "w")
+        file = open(self.configPath.joinpath("excmd.cfg"), "w", encoding='utf-8')
     
         if not file.writable():
             raise Exception("Failed to open <execute>.cfg file for writing")
@@ -115,11 +147,11 @@ class CMD(Observable):
         file.close()
 
     def _deleteExecuteConfigFile(self):
-        if self.configPath.joinpath("cmd.cfg").is_file():
-            os.remove(self.configPath.joinpath("cmd.cfg"))
+        if self.configPath.joinpath("excmd.cfg").is_file():
+            os.remove(self.configPath.joinpath("excmd.cfg"))
 
     def _executeConfigFile(self):
-        pyautogui.press('f9')
+        pyautogui.press('f8')
 
     def quick_execute(self, command: str):
         self._writeExecuteConfigFile(command)
@@ -127,8 +159,7 @@ class CMD(Observable):
         self._deleteExecuteConfigFile()
 
     def execute(self, command: str):
-        #Todo: Implement a queue
-        self.quick_execute(command)
+        self.commandQueue.append(Command(command))
 
     def write_allchat(self, message: str):
         self.execute("say " + message)
@@ -154,7 +185,7 @@ class CMD(Observable):
         if not file.writable():
             raise Exception("Failed to open .cfg file for writing")
     
-        file.write("bind \"F9\" \"exec excmd\"\n")
+        file.write("bind \"F8\" \"exec excmd\"\n")
         
         #SessionKey: [<sessionKey>]
         file.write("echoln SessionKey: [" + self.session_key + "]\n")
