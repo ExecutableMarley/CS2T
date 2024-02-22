@@ -3,8 +3,11 @@ import threading
 import re
 import enum
 
-from GameUtility.cmd import CMD
 from pathlib import Path
+try:
+    from game_cmd import CMD
+except ModuleNotFoundError:
+    from GameUtility.game_cmd import CMD
 
 
 class UI_STATE(enum.Enum):

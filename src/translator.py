@@ -1,8 +1,8 @@
 import time
 import threading
 
-from ConsoleInterface.CMD import CMD
-from GameState import GameState
+from GameUtility.game_cmd import CMD
+from GameUtility.game_state import GameState
 
 from pathlib import Path
 from deep_translator import GoogleTranslator

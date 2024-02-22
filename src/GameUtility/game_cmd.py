@@ -6,7 +6,13 @@ import re
 import pyautogui
 
 from pathlib import Path
-
+try:
+    from os_helpers import isMouseCursorVisible, getForegroundWindow
+except ModuleNotFoundError:
+    from GameUtility.os_helpers import isMouseCursorVisible, getForegroundWindow
+    
+    
+    
 #Os specific Imports
 os_name = platform.system()
 if os_name == "Windows":
@@ -152,6 +158,7 @@ class CMD(Observable):
 
     def _executeConfigFile(self):
         pyautogui.press('f8')
+        
 
     def quick_execute(self, command: str):
         self._writeExecuteConfigFile(command)
@@ -170,7 +177,7 @@ class CMD(Observable):
     def is_input_possible(self) -> bool:
         global os_name
         if os_name == "Windows":
-            return True
+            return not isMouseCursorVisible() and getForegroundWindow() == "Counter-Strike: Global Offensive"
         elif os_name == "Linux":
             return True
         else:
