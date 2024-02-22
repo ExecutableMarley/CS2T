@@ -84,6 +84,7 @@ class GameState:
         # [CT] <name>@<location>: <message>
         # [ALL] <name>: <message>
         if string.startswith(" [ALL] ") or string.startswith(" [T] ") or string.startswith(" [CT] "):
+            string = self.cleanString(string)
             match = GameState.teamMessagePattern.match(string)
             if match:
                 self.parseMessage(match.group("team"), match.group("name"), match.group("location"), match.group("message"))
@@ -111,9 +112,15 @@ class GameState:
     
     def parseMessage(self, team, name, location, message):
         #print(f"[{team}] {name}: {location} {message}")
-        name = name.replace('\u200e', '')
         for handler in self.messageHandlers:
             handler(team, name, location, message)
+
+    def cleanString(self, string: str):
+        #Delete \u200e
+        string = string.replace('\u200e', '')
+        #Replace "﹫" by "@"
+        string = string.replace('﹫', '@')
+        return string
 
     def attachMessageHandler(self, handler):
         self.messageHandlers.append(handler)
