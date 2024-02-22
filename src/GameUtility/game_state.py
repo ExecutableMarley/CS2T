@@ -3,7 +3,7 @@ import threading
 import re
 import enum
 
-from ConsoleInterface.CMD import CMD
+from GameUtility.cmd import CMD
 from pathlib import Path
 
 
