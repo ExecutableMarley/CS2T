@@ -2,14 +2,10 @@ import time
 import threading
 
 from ConsoleInterface.CMD import CMD
-import GameState as GameState
+from GameState import GameState
 
 from pathlib import Path
 from deep_translator import GoogleTranslator
-
-output = GoogleTranslator(source='auto', target='en').translate('Hola Mundo')
-
-print(output)
 
 class Message:
     def __init__(self, team, name, location, message):
@@ -25,8 +21,8 @@ class Message:
         return f"[{self.team}] {self.name}: {self.message}"
 
 class Translator:   
-    def __init__(self, gameState: GameState.GameState):
-        self.gameState: GameState.GameState = gameState
+    def __init__(self, gameState: GameState):
+        self.gameState: GameState = gameState
         self.targetLanguage = 'en'
         self.messageQueue = []
     
@@ -67,7 +63,7 @@ if __name__ == "__main__":
     cmd = CMD(csgoPath)
     cmd.start()
     
-    gameState = GameState.GameState(cmd)
+    gameState = GameState(cmd)
     
     translator = Translator(gameState)
     
