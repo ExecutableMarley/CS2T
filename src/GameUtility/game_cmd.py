@@ -7,9 +7,9 @@ import pyautogui
 
 from pathlib import Path
 try:
-    from os_helpers import isMouseCursorVisible, getForegroundWindow
+    from os_helpers import isMouseCursorVisible, getForegroundWindow, getWindowCenterOfForegroundWindow
 except ModuleNotFoundError:
-    from GameUtility.os_helpers import isMouseCursorVisible, getForegroundWindow
+    from GameUtility.os_helpers import isMouseCursorVisible, getForegroundWindow, getWindowCenterOfForegroundWindow
     
     
     
@@ -177,7 +177,10 @@ class CMD(Observable):
     def is_input_possible(self) -> bool:
         global os_name
         if os_name == "Windows":
-            return not isMouseCursorVisible() and getForegroundWindow() == "Counter-Strike: Global Offensive"
+            if getForegroundWindow() == "Counter-Strike 2":
+                cursorX = pyautogui.position().x
+                centerX = getWindowCenterOfForegroundWindow()[0]
+                return cursorX == centerX
         elif os_name == "Linux":
             return True
         else:

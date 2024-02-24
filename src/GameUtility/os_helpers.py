@@ -44,6 +44,39 @@ def getForegroundWindow() -> str:
     else:
         return "OS not supported"
     
+def getWindowRect(hwnd):
+    # Windows
+    if os_name == "Windows":
+        return win32gui.GetWindowRect(hwnd)
+    # Linux
+    elif os_name == "Linux":
+        return "Linux not supported"
+    else:
+        return "OS not supported"
+
+def getWindowCenter(hwnd):
+    # Windows
+    if os_name == "Windows":
+        rect = getWindowRect(hwnd)
+        return (rect[0] + rect[2]) / 2, (rect[1] + rect[3]) / 2
+    # Linux
+    elif os_name == "Linux":
+        return "Linux not supported"
+    else:
+        return "OS not supported"
+
+def getWindowCenterOfForegroundWindow():
+    # Windows
+    if os_name == "Windows":
+        hwnd = win32gui.GetForegroundWindow()
+        return getWindowCenter(hwnd)
+    # Linux
+    elif os_name == "Linux":
+        return "Linux not supported"
+    else:
+        return "OS not supported"
+
+
 if __name__ == "__main__":
     print(isMouseCursorVisible())
     print(getForegroundWindow())
