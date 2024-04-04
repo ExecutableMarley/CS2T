@@ -7,6 +7,7 @@ from GameUtility.game_state import GameState
 
 from pathlib import Path
 from deep_translator import GoogleTranslator
+from googletrans import Translator as GoogleTranslator2
 
 class Message:
     def __init__(self, team, name, location, message):
@@ -22,9 +23,17 @@ class Message:
         return self.smallStr()
 
 class TranslatedMessage(Message):
-    def __init__(self, team, name, location, message, translatedMessage):
+    def __init__(self, team, name, location, message, translatedMessage, src = None, dest = None):
         super().__init__(team, name, location, message)
         self.translatedMessage:str = translatedMessage
+        self.src = src
+        self.dest = dest
+    
+    def isTranslationDifferent(self):
+        if self.dest == None or self.src == None:
+            self.translatedMessage != self.message
+        else:
+            return self.dest != self.src
     
     def smallStr(self):
         return f"[{self.team}] {self.name}: {self.message}\nTranslated: {self.translatedMessage}"
@@ -35,21 +44,23 @@ class TranslatedMessage(Message):
     def hasTranslation(self):
         return self.translatedMessage != None
     
-    def isTranslationDifferent(self):
-        return self.translatedMessage != self.message
-    
     def getTranslation(self):
-        return f"[Translated] {self.name}: {self.translatedMessage}"
+        if self.src == None or self.dest == None:
+            return f"[Translated] {self.name}: {self.translatedMessage}"
+        else:
+            return f"[{self.src} -> {self.dest}] {self.name}: {self.translatedMessage}"
     
     #[Statics]
     
-    def fromMessage(message: Message, translatedMessage: str):
-        return TranslatedMessage(message.team, message.name, message.location, message.message, translatedMessage)
+    def fromMessage(message: Message, translatedMessage: str, src = None, dest = None):
+        return TranslatedMessage(message.team, message.name, message.location, message.message, translatedMessage, src, dest)
 
 class Translator:
     
     languageCodes = ['en', 'de', 'es', 'fr', 'it', 'nl', 'pl', 'pt', 'ru', 
                      'ja', 'ko', 'tur', 'sv', 'no', 'da', 'fi']
+    
+    isTranslatedPattern = re.compile(r"^\[(Translated|\w+ -> \w+)\]")
     
     def __init__(self, gameState: GameState):
         self.gameState: GameState = gameState
@@ -69,7 +80,7 @@ class Translator:
                 
                 if len(message.message) > 4 and message.message.startswith("[") and message.message[3] == "]":
                     self.processMessageCommand(message)
-                elif not message.message.startswith("[Translated]"):
+                elif not self.isTranslatedPattern.match(message.message):
                     self.processMessage(message)
             else:
                 time.sleep(1)
@@ -81,8 +92,8 @@ class Translator:
         
         print(message.smallStr())
         
-        translatedMessage = TranslatedMessage.fromMessage(message, self.translate(message.message))
-        if translatedMessage.hasTranslation():
+        translatedMessage = self.translate(message)
+        if translatedMessage.hasTranslation() and translatedMessage.isTranslationDifferent():
             print(translatedMessage.getTranslation())
             if self.outputTranslatedMessages:
                 self.writeMessageTranslation(translatedMessage)
@@ -97,17 +108,26 @@ class Translator:
         if languageCode not in Translator.languageCodes:
             return
         
-        translatedMessage = TranslatedMessage.fromMessage(message, self.translateTo(message.message[4:], languageCode))
-        if translatedMessage.hasTranslation():
+        #Create a copy of the message without the language code
+        messageCopy = Message(message.team, message.name, message.location, message.message[4:])
+        
+        translatedMessage = self.translateTo(messageCopy, languageCode)
+        if translatedMessage.hasTranslation() and translatedMessage.isTranslationDifferent():
             print(f"[{languageCode}] {translatedMessage.getTranslation()}")
             if self.outputTranslatedMessages:
                 self.writeMessageTranslation(translatedMessage)
     
-    def translate(self, text: str) -> str:
-        return GoogleTranslator(source='auto', target=self.targetLanguage).translate(text)
+    def translate(self, message: Message) -> TranslatedMessage:
+        translator = GoogleTranslator2()
+        
+        translated = translator.translate(message.message, dest=self.targetLanguage)
+        return TranslatedMessage.fromMessage(message, translated.text, src=translated.src, dest=translated.dest)
     
-    def translateTo(self, text: str, targetLanguage: str) -> str:
-        return GoogleTranslator(source='auto', target=targetLanguage).translate(text)
+    def translateTo(self, message: Message, targetLanguage: str) -> TranslatedMessage:
+        translator = GoogleTranslator2()
+        
+        translated = translator.translate(message.message, dest=targetLanguage)
+        return TranslatedMessage.fromMessage(message, translated.text, src=translated.src, dest=translated.dest)
     
     def setTargetLanguage(self, targetLanguage: str):
         self.targetLanguage = targetLanguage
