@@ -4,6 +4,8 @@ import time
 import threading
 import re
 import pyautogui
+import random
+import string
 
 from pathlib import Path
 try:
@@ -69,7 +71,7 @@ class CMD(Observable):
         self.configPath:   Path = rootPath.joinpath("game/csgo/cfg/")
         self.logFilePath:  Path = rootPath.joinpath("game/csgo/console.log")
         self.thread: threading.Thread = None
-        self.session_key = "123"
+        self.session_key = ''.join(random.choices(string.ascii_uppercase + string.digits, k=5))
         self.is_attached = False
         self.lastLine: str = ""
         self.commandQueue: list = []
@@ -79,6 +81,7 @@ class CMD(Observable):
         if not self.configPath.is_dir():
             raise Exception("Config Path is not a directory")
 
+        self.start()
 
     def __del__(self):
         #Delete Config
