@@ -12,15 +12,6 @@ try:
     from os_helpers import isMouseCursorVisible, getForegroundWindow, getWindowCenterOfForegroundWindow
 except ModuleNotFoundError:
     from GameUtility.os_helpers import isMouseCursorVisible, getForegroundWindow, getWindowCenterOfForegroundWindow
-    
-    
-    
-#Os specific Imports
-os_name = platform.system()
-if os_name == "Windows":
-    pass
-elif os_name == "Linux":
-    pass
 
 class Observable:
     def __init__(self):
@@ -207,6 +198,6 @@ class CMD(Observable):
         file.write("status\n")
     
         file.write("echo Attempting to attach CMD Interface...\n")
-        file.write("echo https://github.com/ExecutableMarley/<projectPath>\n")
+        file.write("echo github.com/ExecutableMarley/CS2T\n")
     
         file.close()
