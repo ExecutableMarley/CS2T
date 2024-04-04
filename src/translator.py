@@ -49,14 +49,14 @@ class TranslatedMessage(Message):
 class Translator:
     
     languageCodes = ['en', 'de', 'es', 'fr', 'it', 'nl', 'pl', 'pt', 'ru', 
-                     'zh', 'ja', 'ko', 'tur', 'sv', 'no', 'da', 'fi']
+                     'ja', 'ko', 'tur', 'sv', 'no', 'da', 'fi']
     
     def __init__(self, gameState: GameState):
         self.gameState: GameState = gameState
         self.targetLanguage = 'en'
         self.messageQueue = []
         self.outputTranslatedMessages = True
-        self.onlyOutputToTeam = True
+        self.onlyOutputToTeam = False
     
         self.gameState.attachMessageHandler(self.addMessage)
 
@@ -67,7 +67,7 @@ class Translator:
             if len(self.messageQueue) > 0:
                 message: Message = self.messageQueue.pop(0)
                 
-                if message.message.startswith("[") and message.message[3] == "]":
+                if len(message.message) > 4 and message.message.startswith("[") and message.message[3] == "]":
                     self.processMessageCommand(message)
                 elif not message.message.startswith("[Translated]"):
                     self.processMessage(message)
@@ -125,7 +125,6 @@ if __name__ == "__main__":
     csgoPath = Path("C:/Program Files (x86)/Steam/steamapps/common/Counter-Strike Global Offensive/")
     
     cmd = CMD(csgoPath)
-    cmd.start()
     
     gameState = GameState(cmd)
     
