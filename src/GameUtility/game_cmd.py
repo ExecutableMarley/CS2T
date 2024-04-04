@@ -13,6 +13,8 @@ try:
 except ModuleNotFoundError:
     from GameUtility.os_helpers import isMouseCursorVisible, getForegroundWindow, getWindowCenterOfForegroundWindow
 
+os_name = platform.system()
+
 class Observable:
     def __init__(self):
         self._observers: list = []
