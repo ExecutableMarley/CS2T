@@ -133,7 +133,7 @@ class Translator:
         self.targetLanguage = targetLanguage
     
     def writeMessageTranslation(self, translatedMessage: TranslatedMessage):
-        if translatedMessage.hasTranslation() and translatedMessage.isTranslationDifferent():
+        if translatedMessage.hasTranslation() and translatedMessage.isTranslationDifferent() and translatedMessage.src in Translator.languageCodes:
             if self.onlyOutputToTeam or translatedMessage.team != "ALL":
                 self.gameState.write_team_message(translatedMessage.getTranslation())
             else:
