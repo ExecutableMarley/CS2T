@@ -58,7 +58,8 @@ class TranslatedMessage(Message):
 class Translator:
     
     languageCodes = ['en', 'de', 'es', 'fr', 'it', 'nl', 'pl', 'pt', 'ru', 
-                     'ja', 'ko', 'tur', 'sv', 'no', 'da', 'fi']
+                     'ja', 'ko', 'tur', 'sv', 'no', 'da', 'fi',
+                     'tr', 'ar', 'bg', 'sr', 'mn', 'mk', 'uk']
     
     isTranslatedPattern = re.compile(r"^\[(Translated|\w+ -> \w+)\]")
     
